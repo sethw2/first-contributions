@@ -49,12 +49,18 @@ class UniverseConfig:
         "SPY", "QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
         "META", "XLF", "XLE", "XLK", "IWM",
     ])
-    min_avg_dollar_volume: float = 20_000_000.0  # liquidity floor
-    min_price: float = 5.0                       # no sub-$5 names
+    # Liquidity floor. Lowered per operator guidance: with a sub-$100M book we
+    # won't move lower-liquidity names, so $5M ADV is acceptable. Names below
+    # this are screened out because stops become unreliable when you can't exit.
+    min_avg_dollar_volume: float = 5_000_000.0
+    min_price: float = 5.0                       # no sub-$5 names (wide spreads / manipulation)
 
 
 @dataclass
 class StrategyParams:
+    # NOTE: signal strength (breakout distance, RVOL, z-score depth) is used only
+    # to RANK and SELECT candidates — never to size positions. Per operator
+    # direction, the profit edge must come from predicting direction, not sizing.
     breakout_lookback: int = 20
     trend_lookback: int = 200
     rsi_period: int = 14
@@ -75,6 +81,7 @@ class Settings:
     strategy: StrategyParams = field(default_factory=StrategyParams)
     starting_equity: float = 100_000.0
     data_feed: str = "iex"                       # Alpaca free feed
+    regular_hours_only: bool = True              # trade ONLY during 9:30-16:00 ET regular session
     kill_switch_file: str = "./KILL_SWITCH"
     log_dir: str = "./logs"
 
@@ -119,6 +126,8 @@ def load_settings(path: Optional[str] = None) -> Settings:
         settings.starting_equity = float(data["starting_equity"])
     if "data_feed" in data:
         settings.data_feed = str(data["data_feed"])
+    if "regular_hours_only" in data:
+        settings.regular_hours_only = bool(data["regular_hours_only"])
     if "kill_switch_file" in data:
         settings.kill_switch_file = str(data["kill_switch_file"])
 

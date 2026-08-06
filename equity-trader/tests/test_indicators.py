@@ -56,3 +56,19 @@ def test_zscore_sign():
 def test_avg_dollar_volume():
     bars = bars_from_closes([100] * 20, vol=1_000_000)
     assert ind.avg_dollar_volume(bars, 20) == pytest.approx(100_000_000)
+
+
+def test_rvol_flat_is_one():
+    bars = bars_from_closes([100] * 21, vol=1_000_000)
+    assert ind.rvol(bars, 20) == pytest.approx(1.0)
+
+
+def test_rvol_spike_above_one():
+    bars = bars_from_closes([100] * 20, vol=1_000_000)
+    bars.append(ind.Bar(bars[-1].timestamp, 100, 101, 99, 100, 3_000_000))
+    assert ind.rvol(bars, 20) == pytest.approx(3.0)
+
+
+def test_rvol_insufficient_history():
+    bars = bars_from_closes([100] * 5, vol=1_000_000)
+    assert ind.rvol(bars, 20) is None

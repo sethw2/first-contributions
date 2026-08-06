@@ -5,6 +5,7 @@
 environment: paper          # "paper" | "live"  -- live also requires an interactive confirm
 starting_equity: 100000
 data_feed: iex              # Alpaca free feed; "sip" requires a paid subscription
+regular_hours_only: true    # trade ONLY during 9:30-16:00 ET regular session (no pre/post market)
 kill_switch_file: ./KILL_SWITCH
 log_dir: ./logs
 
@@ -23,7 +24,7 @@ risk:
 
 universe:
   symbols: [SPY, QQQ, AAPL, MSFT, NVDA, AMZN, GOOGL, META, XLF, XLE, XLK, IWM]
-  min_avg_dollar_volume: 20000000
+  min_avg_dollar_volume: 5000000   # lowered: sub-$100M book tolerates lower-liquidity names
   min_price: 5.0
 
 strategy:

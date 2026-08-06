@@ -70,7 +70,10 @@ class LiveLoop:
                 log.error("kill switch tripped; halting loop")
                 self.engine.broker.cancel_all_orders()
                 break
-            if not is_market_open(now):
+            # Standard-market-hours-only: never send orders outside the 9:30-16:00
+            # ET regular session. (Positions may still be *held* overnight up to
+            # the 2-week time stop; we simply do not trade until the market reopens.)
+            if self.settings.regular_hours_only and not is_market_open(now):
                 log.debug("market closed at %s; idling", now.isoformat())
                 time.sleep(self.poll_seconds)
                 continue

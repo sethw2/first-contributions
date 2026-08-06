@@ -83,5 +83,21 @@ def avg_dollar_volume(bars: Sequence[Bar], period: int = 20) -> Optional[float]:
     return sum(b.close * b.volume for b in window) / period
 
 
+def rvol(bars: Sequence[Bar], period: int = 20) -> Optional[float]:
+    """Relative volume: the latest bar's volume vs the trailing average.
+
+    The trailing window EXCLUDES the current bar, so it measures how unusual the
+    current bar's participation is against its own recent baseline. Used as a
+    directional-conviction input (not for sizing).
+    """
+    if len(bars) < period + 1 or period <= 0:
+        return None
+    baseline = bars[-period - 1:-1]
+    avg = sum(b.volume for b in baseline) / period
+    if avg <= 0:
+        return None
+    return bars[-1].volume / avg
+
+
 def closes(bars: Sequence[Bar]) -> List[float]:
     return [b.close for b in bars]

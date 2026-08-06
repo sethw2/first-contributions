@@ -14,7 +14,10 @@ from ..execution.paper_sim import PaperSimBroker
 
 @dataclass
 class CostModel:
-    slippage_bps: float = 2.0            # per-side slippage in basis points
+    # Per-side slippage in basis points. Raised from 2 -> 5 bps because the
+    # relaxed liquidity floor admits lower-liquidity names, which slip more.
+    # Tighten this only if you measure real fills that justify it.
+    slippage_bps: float = 5.0
     commission_per_share: float = 0.0    # Alpaca = 0; model anyway
 
     def build_broker(self, starting_cash: float) -> PaperSimBroker:

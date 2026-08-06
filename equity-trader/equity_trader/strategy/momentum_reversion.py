@@ -24,6 +24,7 @@ from .indicators import (
     rolling_high,
     rolling_low,
     rsi,
+    rvol,
     sma,
     zscore,
 )
@@ -80,14 +81,17 @@ class MomentumReversionStrategy(Strategy):
         prior_high = rolling_high(c[:-1], self.p.breakout_lookback)
         if prior_high is None or last.close <= prior_high:
             return None
-        avg_vol = sum(b.volume for b in bars[-self.p.breakout_lookback:]) / self.p.breakout_lookback
-        if avg_vol <= 0 or last.volume < self.p.volume_confirm_multiple * avg_vol:
+        # Volume as a directional input: a breakout is only trusted if it comes
+        # on above-baseline participation (RVOL). Breakouts on thin volume fade.
+        rv = rvol(bars, self.p.breakout_lookback)
+        if rv is None or rv < self.p.volume_confirm_multiple:
             return None
-        # strength: breakout distance in ATRs, capped to 0..1
-        strength = min(1.0, (last.close - prior_high) / a)
-        return Signal(symbol=symbol, side=Side.BUY, strength=max(0.05, strength),
+        breakout = min(1.0, (last.close - prior_high) / a)   # distance in ATRs
+        vol_score = min(1.0, max(0.0, (rv - 1.0) / 2.0))     # how heavy the volume is
+        strength = max(0.05, 0.6 * breakout + 0.4 * vol_score)
+        return Signal(symbol=symbol, side=Side.BUY, strength=strength,
                       reference_price=last.close, atr=a, kind="momentum",
-                      reason=f"breakout>{self.p.breakout_lookback}d high with volume confirm")
+                      reason=f"breakout>{self.p.breakout_lookback}bar high, RVOL {rv:.1f}x")
 
     def _reversion(self, symbol, bars, c, a, last) -> Optional[Signal]:
         trend = sma(c, self.p.trend_lookback)
@@ -99,11 +103,15 @@ class MomentumReversionStrategy(Strategy):
             return None
         if r > self.p.rsi_oversold or z > self.p.zscore_entry:
             return None
-        # strength: deeper oversold = stronger, capped to 0..1
-        strength = min(1.0, abs(z) / 3.0)
-        return Signal(symbol=symbol, side=Side.BUY, strength=max(0.05, strength),
+        # Volume as a directional input: a capitulation flush (elevated RVOL) on
+        # the oversold bar raises confidence the dip is exhausting, not trending.
+        rv = rvol(bars, self.p.zscore_lookback) or 1.0
+        base = min(1.0, abs(z) / 3.0)                        # depth of the dislocation
+        vol_score = min(1.0, max(0.0, (rv - 1.0) / 2.0))
+        strength = max(0.05, 0.7 * base + 0.3 * vol_score)
+        return Signal(symbol=symbol, side=Side.BUY, strength=strength,
                       reference_price=last.close, atr=a, kind="reversion",
-                      reason=f"oversold pullback (RSI {r:.0f}, z {z:.2f}) in uptrend")
+                      reason=f"oversold (RSI {r:.0f}, z {z:.2f}), RVOL {rv:.1f}x in uptrend")
 
     def should_exit(self, position: Position, bars: List[Bar], now: datetime) -> Optional[str]:
         c = closes(bars)

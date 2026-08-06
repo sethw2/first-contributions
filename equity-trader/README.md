@@ -101,6 +101,20 @@ Defaults are conservative on purpose: 0.75% risk per trade, ≤ 8 positions, no
 leverage, long-only, 20% max per-symbol notional, −3% daily circuit breaker,
 2-week max hold.
 
+Operator-set behavior baked in per guidance:
+
+- **Standard market hours only** (`regular_hours_only: true`). Orders are sent
+  only during the 9:30–16:00 ET regular session — no pre/post-market. Positions
+  may still be *held* overnight up to the time stop; a stop breached overnight is
+  acted on at the next open (an accepted consequence of RTH-only trading).
+- **Lower-liquidity names allowed.** The average-dollar-volume floor is $5M
+  (down from $20M): with a sub-$100M book we won't move these names. Backtest
+  slippage was raised to 5 bps to keep results honest for thinner stocks.
+- **Edge comes from direction, not sizing.** Signal strength — including the new
+  relative-volume (RVOL) input — only *ranks and selects* trades. It never
+  changes position size. The sizing scheme itself is an operator decision (see
+  below).
+
 ## Honest limitations (v1)
 
 This is a **scaffold**, not a validated money-maker. Specifically:
