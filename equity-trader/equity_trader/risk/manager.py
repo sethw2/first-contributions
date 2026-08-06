@@ -79,11 +79,18 @@ class RiskManager:
         return self.halted_for_session
 
     # ------------------------------------------------------------------- sizing
-    def size_position(self, equity: float, entry_price: float, stop_price: float) -> int:
-        """Whole-share size from the risk budget, capped by the notional limit.
+    def size_position(self, equity: float, entry_price: float, stop_price: float,
+                      avg_daily_volume: Optional[float] = None) -> int:
+        """Whole-share size from the risk budget, clipped by hard caps.
 
-        shares = (equity * risk_per_trade) / per-share-stop-distance,
-        then clipped so a single symbol never exceeds ``max_position_notional_pct``.
+        Equal-risk sizing (operator-chosen): shares are set so the trade risks a
+        fixed fraction of equity to its stop. The profit edge is meant to come
+        from direction, not from this scheme — signal strength never enters here.
+
+        The result is then clipped by:
+          - ``max_position_notional_pct`` (no symbol dominates the book), and
+          - ``max_adv_participation``     (position <= 1% of avg daily volume, so
+                                           we can always exit lower-liquidity names).
         Returns 0 when inputs are invalid (never raises into strategy code).
         """
         if entry_price <= 0:
@@ -93,9 +100,12 @@ class RiskManager:
             return 0
         risk_budget = equity * self.limits.risk_per_trade
         shares_by_risk = risk_budget / stop_distance
-        max_notional = equity * self.limits.max_position_notional_pct
-        shares_by_notional = max_notional / entry_price
-        return max(0, int(math.floor(min(shares_by_risk, shares_by_notional))))
+        shares_by_notional = (equity * self.limits.max_position_notional_pct) / entry_price
+        cap = min(shares_by_risk, shares_by_notional)
+        if avg_daily_volume and avg_daily_volume > 0:
+            shares_by_adv = self.limits.max_adv_participation * avg_daily_volume
+            cap = min(cap, shares_by_adv)
+        return max(0, int(math.floor(cap)))
 
     def compute_stops(self, side: Side, entry_price: float, atr: float,
                       entry_time: datetime) -> "tuple[float, float, datetime]":

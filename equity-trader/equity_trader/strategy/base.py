@@ -21,10 +21,11 @@ class Signal:
 
     symbol: str
     side: Side
-    strength: float          # 0..1 ranking score; higher = more preferred
+    strength: float          # 0..1 ranking score; higher = more preferred (SELECTION only, never sizing)
     reference_price: float   # price the signal is based on (last close)
     atr: float               # for volatility-based stop sizing
     kind: str = ""           # "momentum" | "reversion"
+    avg_volume: float = 0.0  # avg daily volume in shares (for the ADV participation cap)
     reason: str = ""         # human-readable rationale for the audit log
 
 

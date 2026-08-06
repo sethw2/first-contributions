@@ -83,6 +83,13 @@ def avg_dollar_volume(bars: Sequence[Bar], period: int = 20) -> Optional[float]:
     return sum(b.close * b.volume for b in window) / period
 
 
+def avg_volume(bars: Sequence[Bar], period: int = 20) -> Optional[float]:
+    """Average share volume over the trailing window (for the ADV cap)."""
+    if len(bars) < period or period <= 0:
+        return None
+    return sum(b.volume for b in bars[-period:]) / period
+
+
 def rvol(bars: Sequence[Bar], period: int = 20) -> Optional[float]:
     """Relative volume: the latest bar's volume vs the trailing average.
 

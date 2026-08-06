@@ -20,6 +20,7 @@ from .base import Signal, Strategy
 from .indicators import (
     atr,
     avg_dollar_volume,
+    avg_volume,
     closes,
     rolling_high,
     rolling_low,
@@ -73,9 +74,12 @@ class MomentumReversionStrategy(Strategy):
             return None
         last = bars[-1]
 
-        if regime is Regime.RISK_ON:
-            return self._momentum(symbol, bars, c, a, last)
-        return self._reversion(symbol, bars, c, a, last)
+        sig = (self._momentum(symbol, bars, c, a, last) if regime is Regime.RISK_ON
+               else self._reversion(symbol, bars, c, a, last))
+        if sig is not None:
+            # Attach avg daily volume (shares) for the RiskManager's ADV cap.
+            sig.avg_volume = avg_volume(bars, 20) or 0.0
+        return sig
 
     def _momentum(self, symbol, bars, c, a, last) -> Optional[Signal]:
         prior_high = rolling_high(c[:-1], self.p.breakout_lookback)

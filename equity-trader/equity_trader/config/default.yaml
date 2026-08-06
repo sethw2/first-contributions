@@ -14,6 +14,7 @@ risk:
   max_concurrent_positions: 8
   max_gross_exposure: 1.0         # 1.0 = no leverage
   max_position_notional_pct: 0.20 # any one symbol <= 20% of equity
+  max_adv_participation: 0.01     # any one position <= 1% of the name's avg daily volume (exit safety)
   daily_loss_limit: 0.03          # -3% session P&L -> flatten & halt for the day
   max_holding_days: 14            # 2-week ceiling (time stop)
   min_holding_minutes: 30         # 30-minute floor

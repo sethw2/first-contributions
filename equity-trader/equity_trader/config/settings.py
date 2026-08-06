@@ -25,6 +25,7 @@ class RiskLimits:
     max_concurrent_positions: int = 8
     max_gross_exposure: float = 1.0         # 1.0 = no leverage
     max_position_notional_pct: float = 0.20  # any one symbol <= 20% of equity
+    max_adv_participation: float = 0.01     # any one position <= 1% of the name's avg daily volume
     daily_loss_limit: float = 0.03          # -3% session P&L -> flatten & halt
     max_holding_days: float = 14.0          # 2-week ceiling (time stop)
     min_holding_minutes: float = 30.0       # 30-minute floor
@@ -38,6 +39,7 @@ class RiskLimits:
         assert self.max_concurrent_positions >= 1
         assert 0 < self.max_gross_exposure <= 4.0
         assert 0 < self.max_position_notional_pct <= 1.0
+        assert 0 < self.max_adv_participation <= 0.25
         assert 0 < self.daily_loss_limit < 1.0
         assert self.min_holding_minutes >= 0
         assert self.max_holding_days * 24 * 60 > self.min_holding_minutes

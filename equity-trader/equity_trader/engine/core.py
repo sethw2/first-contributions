@@ -115,7 +115,8 @@ class TradingEngine:
     def _try_enter(self, sig: Signal, now, account: Account) -> None:
         stop, take_profit, time_stop = self.risk.compute_stops(
             sig.side, sig.reference_price, sig.atr, now)
-        qty = self.risk.size_position(account.equity, sig.reference_price, stop)
+        qty = self.risk.size_position(account.equity, sig.reference_price, stop,
+                                      avg_daily_volume=sig.avg_volume)
         if qty <= 0:
             return
 

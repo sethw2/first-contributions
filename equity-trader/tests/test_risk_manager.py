@@ -47,6 +47,22 @@ def test_sizing_rejects_zero_stop_distance(tmp_path):
     assert rm.size_position(equity=100_000, entry_price=100, stop_price=100) == 0
 
 
+def test_sizing_adv_participation_cap_binds(tmp_path):
+    rm = make_rm(tmp_path)  # max_adv_participation default 1%
+    # Risk allows 375 shares and notional allows 200, but a thin name with
+    # 10,000 ADV caps us at 1% = 100 shares.
+    qty = rm.size_position(equity=100_000, entry_price=100, stop_price=98,
+                           avg_daily_volume=10_000)
+    assert qty == 100
+
+
+def test_sizing_adv_cap_absent_when_no_volume(tmp_path):
+    rm = make_rm(tmp_path)
+    # No ADV supplied -> cap does not apply; notional cap (200) still binds.
+    qty = rm.size_position(equity=100_000, entry_price=100, stop_price=98)
+    assert qty == 200
+
+
 # ---------------------------------------------------------------- gating
 def test_kill_switch_blocks_entry(tmp_path):
     rm = make_rm(tmp_path)

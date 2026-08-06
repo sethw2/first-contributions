@@ -110,10 +110,11 @@ Operator-set behavior baked in per guidance:
 - **Lower-liquidity names allowed.** The average-dollar-volume floor is $5M
   (down from $20M): with a sub-$100M book we won't move these names. Backtest
   slippage was raised to 5 bps to keep results honest for thinner stocks.
-- **Edge comes from direction, not sizing.** Signal strength — including the new
-  relative-volume (RVOL) input — only *ranks and selects* trades. It never
-  changes position size. The sizing scheme itself is an operator decision (see
-  below).
+- **Edge comes from direction, not sizing.** Signal strength — including the
+  relative-volume (RVOL) input — only *ranks and selects* trades; it never
+  changes position size. Sizing is **equal-risk** (each trade risks a fixed % of
+  equity to its stop), then clipped by the 20% notional cap and a **1% ADV
+  participation cap** so a position in a thinner name can always be exited.
 
 ## Honest limitations (v1)
 
