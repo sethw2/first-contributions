@@ -32,6 +32,10 @@ from .indicators import (
 from .regime import Regime, classify
 
 
+def _fmt(rv: Optional[float]) -> str:
+    return f"{rv:.1f}x" if rv is not None else "n/a"
+
+
 class MomentumReversionStrategy(Strategy):
     name = "momentum_reversion_v1"
 
@@ -85,17 +89,17 @@ class MomentumReversionStrategy(Strategy):
         prior_high = rolling_high(c[:-1], self.p.breakout_lookback)
         if prior_high is None or last.close <= prior_high:
             return None
-        # Volume as a directional input: a breakout is only trusted if it comes
-        # on above-baseline participation (RVOL). Breakouts on thin volume fade.
         rv = rvol(bars, self.p.breakout_lookback)
-        if rv is None or rv < self.p.volume_confirm_multiple:
+        # Volume is NOT required. The gate only applies if explicitly opted in;
+        # otherwise a valid breakout stands on its own regardless of volume.
+        if self.p.require_volume_confirmation and rv is not None \
+                and rv < self.p.volume_confirm_multiple:
             return None
-        breakout = min(1.0, (last.close - prior_high) / a)   # distance in ATRs
-        vol_score = min(1.0, max(0.0, (rv - 1.0) / 2.0))     # how heavy the volume is
-        strength = max(0.05, 0.6 * breakout + 0.4 * vol_score)
+        breakout = min(1.0, (last.close - prior_high) / a)   # distance in ATRs (primary)
+        strength = max(0.05, min(1.0, 0.8 * breakout + self._vol_bonus(rv)))
         return Signal(symbol=symbol, side=Side.BUY, strength=strength,
                       reference_price=last.close, atr=a, kind="momentum",
-                      reason=f"breakout>{self.p.breakout_lookback}bar high, RVOL {rv:.1f}x")
+                      reason=f"breakout>{self.p.breakout_lookback}bar high (RVOL {_fmt(rv)})")
 
     def _reversion(self, symbol, bars, c, a, last) -> Optional[Signal]:
         trend = sma(c, self.p.trend_lookback)
@@ -107,15 +111,20 @@ class MomentumReversionStrategy(Strategy):
             return None
         if r > self.p.rsi_oversold or z > self.p.zscore_entry:
             return None
-        # Volume as a directional input: a capitulation flush (elevated RVOL) on
-        # the oversold bar raises confidence the dip is exhausting, not trending.
-        rv = rvol(bars, self.p.zscore_lookback) or 1.0
-        base = min(1.0, abs(z) / 3.0)                        # depth of the dislocation
-        vol_score = min(1.0, max(0.0, (rv - 1.0) / 2.0))
-        strength = max(0.05, 0.7 * base + 0.3 * vol_score)
+        rv = rvol(bars, self.p.zscore_lookback)
+        base = min(1.0, abs(z) / 3.0)                        # depth of the dislocation (primary)
+        strength = max(0.05, min(1.0, 0.8 * base + self._vol_bonus(rv)))
         return Signal(symbol=symbol, side=Side.BUY, strength=strength,
                       reference_price=last.close, atr=a, kind="reversion",
-                      reason=f"oversold (RSI {r:.0f}, z {z:.2f}), RVOL {rv:.1f}x in uptrend")
+                      reason=f"oversold (RSI {r:.0f}, z {z:.2f}, RVOL {_fmt(rv)}) in uptrend")
+
+    @staticmethod
+    def _vol_bonus(rv: Optional[float]) -> float:
+        """A small, optional ranking bonus for heavy volume. Zero when RVOL is
+        absent or at/below baseline — volume can only help a rank, never gate."""
+        if rv is None or rv <= 1.0:
+            return 0.0
+        return 0.2 * min(1.0, (rv - 1.0) / 2.0)
 
     def should_exit(self, position: Position, bars: List[Bar], now: datetime) -> Optional[str]:
         c = closes(bars)

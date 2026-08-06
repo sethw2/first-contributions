@@ -39,7 +39,7 @@ substitute.
 | **Universe** | US equities + major ETFs above a **$5M** average-dollar-volume floor (lower-liquidity names allowed given a sub-$100M book) with a $5 min price | Lower-liquidity names are acceptable at small size; the floor still screens out names too thin to exit. Model higher slippage for thinner stocks. No penny stocks. |
 | **Trading hours** | **Standard market hours only** (09:30–16:00 ET). No pre/post-market orders. | Avoids thin, gappy extended-hours liquidity. Positions may be held overnight; only *order entry* is restricted to RTH. |
 | **Position sizing** | **Equal-risk** (each trade risks a fixed % of equity to its stop), clipped by the notional cap and a **1% average-daily-volume participation cap**. Edge must come from direction, NOT sizing: signal strength ranks/selects trades but never sets size. | Clean P&L attribution; the ADV cap guarantees exit-ability in lower-liquidity names. |
-| **Volume** | Used as a **directional input** (relative-volume confirmation + ranking), never as a sizing input. | Breakouts/reversals on heavy participation are more reliable; volume sharpens the *signal*. |
+| **Volume** | An **optional** directional input, never a requirement and never a sizing input. Relative volume (RVOL) can nudge ranking, but it does NOT gate signals unless explicitly opted in. | Volume can sharpen a signal but must not be assumed necessary; a valid setup stands on price alone. |
 | **Holding horizon** | 30 min (min) to 2 weeks (max), enforced by a **time-based exit** | Matches the brief; caps overnight/weekend gap exposure and prevents "bag-holding." |
 | **Leverage** | None by default (cash/RegT long-only to start). Shorting and leverage are opt-in, later phases. | Removes an entire class of blow-up risk from v1. |
 | **Data** | Alpaca market data for live; a separate historical source for backtests (Alpaca historical, or Polygon/`yfinance` for research) | Keep backtest and live data paths explicit and comparable. |
@@ -100,7 +100,8 @@ first.
   200-period trend, plus a volatility gauge). Only take long momentum signals in
   risk-on regimes; lean to mean-reversion / stand aside in risk-off.
 - **Entry (momentum leg):** short-term breakout / relative-strength on the liquid
-  universe (e.g., N-day high with a volume confirmation and an ATR-based volatility screen).
+  universe (e.g., N-day high with an ATR-based volatility screen; volume is an
+  optional confirmation, not a requirement).
 - **Entry (mean-reversion leg):** oversold pullback within an established uptrend
   (e.g., RSI/z-score dip that reverts), only in appropriate regime.
 - **Exit:** first of — hard stop hit, profit target hit, signal invalidated, or

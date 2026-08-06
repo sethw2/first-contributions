@@ -36,6 +36,7 @@ strategy:
   zscore_lookback: 20
   zscore_entry: -2.0
   atr_period: 14
-  volume_confirm_multiple: 1.2
+  require_volume_confirmation: false  # volume is optional; RVOL only nudges ranking
+  volume_confirm_multiple: 1.2        # used ONLY if require_volume_confirmation is true
   take_profit_atr_multiple: 3.0
   max_new_positions_per_cycle: 3

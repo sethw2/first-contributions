@@ -70,6 +70,10 @@ class StrategyParams:
     zscore_lookback: int = 20
     zscore_entry: float = -2.0
     atr_period: int = 14
+    # Volume is an OPTIONAL input, not a requirement. RVOL only nudges ranking.
+    # Set require_volume_confirmation=True to re-enable a hard volume gate; the
+    # multiple below is used ONLY when that flag is on.
+    require_volume_confirmation: bool = False
     volume_confirm_multiple: float = 1.2
     take_profit_atr_multiple: float = 3.0
     max_new_positions_per_cycle: int = 3
