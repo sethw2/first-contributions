@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Kill switch flag (operational state, not code)
+KILL_SWITCH
+.backtest_no_kill_flag
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Local market data dumps
+data_csv/

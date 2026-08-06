@@ -1,0 +1,13 @@
+# Core runtime is pure-Python stdlib; these are for live trading, config, and dev.
+
+# --- live/paper trading (optional until you go beyond backtests) ---
+alpaca-py>=0.20.0
+
+# --- config ---
+PyYAML>=6.0
+
+# --- market calendar (optional; a conservative fallback is used if absent) ---
+pandas-market-calendars>=4.3.0
+
+# --- development / testing ---
+pytest>=7.0

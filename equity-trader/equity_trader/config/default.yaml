@@ -1,0 +1,39 @@
+# Default configuration. Conservative on purpose.
+# Secrets (ALPACA_API_KEY / ALPACA_API_SECRET) come from the environment ONLY.
+# Never put API keys in this file.
+
+environment: paper          # "paper" | "live"  -- live also requires an interactive confirm
+starting_equity: 100000
+data_feed: iex              # Alpaca free feed; "sip" requires a paid subscription
+kill_switch_file: ./KILL_SWITCH
+log_dir: ./logs
+
+risk:
+  risk_per_trade: 0.0075          # 0.75% of equity risked to the stop, per trade
+  max_concurrent_positions: 8
+  max_gross_exposure: 1.0         # 1.0 = no leverage
+  max_position_notional_pct: 0.20 # any one symbol <= 20% of equity
+  daily_loss_limit: 0.03          # -3% session P&L -> flatten & halt for the day
+  max_holding_days: 14            # 2-week ceiling (time stop)
+  min_holding_minutes: 30         # 30-minute floor
+  atr_stop_multiple: 2.0          # hard stop distance = k * ATR
+  allow_shorting: false           # long-only in v1
+  pdt_equity_threshold: 25000
+  pdt_max_day_trades: 3
+
+universe:
+  symbols: [SPY, QQQ, AAPL, MSFT, NVDA, AMZN, GOOGL, META, XLF, XLE, XLK, IWM]
+  min_avg_dollar_volume: 20000000
+  min_price: 5.0
+
+strategy:
+  breakout_lookback: 20
+  trend_lookback: 200
+  rsi_period: 14
+  rsi_oversold: 30
+  zscore_lookback: 20
+  zscore_entry: -2.0
+  atr_period: 14
+  volume_confirm_multiple: 1.2
+  take_profit_atr_multiple: 3.0
+  max_new_positions_per_cycle: 3
