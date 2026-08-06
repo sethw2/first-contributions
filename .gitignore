@@ -395,3 +395,27 @@ desktop.ini
 
 .codegpt
 .qodo
+
+# ---------------------------------------------------------------------------
+# equities trading system (Python)
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+uv.lock
+# local data / secrets that must never be committed
+data/raw/
+data/cache/
+*.sqlite
